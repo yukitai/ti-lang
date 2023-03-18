@@ -5,71 +5,79 @@ macro_rules! build_ti_error {
       use colored::Colorize;
       print!("{}: (line {}:{}:{})\n\t", "note".white().bold(), $token.t_at.0, $token.t_at.1.0, $token.t_at.1.1);
       println!($($t) *);
-      panic!()
+      std::process::exit(1)
     }
   };
   (@at $token: expr, @info $($t: tt) *) => {
     {
       use colored::Colorize;
       print!("{}: (line {}:{}:{})\n\t", "info".white().bold(), $token.t_at.0, $token.t_at.1.0, $token.t_at.1.1);
-    println!($($t) *);
-    panic!()}
+      println!($($t) *);
+      std::process::exit(1)
+    }
   };
   (@at $token: expr, @err $($t: tt) *) => {
     {
       use colored::Colorize;
       print!("{}: (line {}:{}:{})\n\t", "error".red().bold(), $token.t_at.0, $token.t_at.1.0, $token.t_at.1.1);
       println!($($t) *);
-      panic!()
+      std::process::exit(1)
     }
   };
   (@at $token: expr, @warn $($t: tt) *) => {
     {
       use colored::Colorize;
       print!("{}: (line {}:{}:{})\n\t", "warn".yellow().bold(), $token.t_at.0, $token.t_at.1.0, $token.t_at.1.1);
-    println!($($t) *);
-    panic!()}
+      println!($($t) *);
+      std::process::exit(1)
+    }
   };
   (@at $token: expr, @help $($t: tt) *) => {
     {
       use colored::Colorize;
       print!("{}: (line {}:{}:{})\n\t", "help".yellow().bold(), $token.t_at.0, $token.t_at.1.0, $token.t_at.1.1);
-    println!($($t) *);
-    panic!()}
+      println!($($t) *);
+      std::process::exit(1)
+    }
   };
   (@note $($t: tt) *) => {
     {
       use colored::Colorize;
       print!("{}:\n\t", "note".yellow().bold());
-    println!($($t) *);
-    panic!()}
+      println!($($t) *);
+      std::process::exit(1)
+    }
   };
   (@info $($t: tt) *) => {
     {
       use colored::Colorize;
       print!("{}:\n\t", "info".yellow().bold());
-    println!($($t) *);
-    panic!()}
+      println!($($t) *);
+      std::process::exit(1)
+    }
   };
   (@err $($t: tt) *) => {
     {
       use colored::Colorize;
       print!("{}:\n\t", "err".yellow().bold());
-    println!($($t) *);
-    panic!()}
+      println!($($t) *);
+      std::process::exit(1)
+    }
   };
   (@warn $($t: tt) *) => {
     {
       use colored::Colorize;
       print!("{}:\n\t", "warn".yellow().bold());
-    println!($($t) *);
-    panic!()}
+      println!($($t) *);
+      std::process::exit(1)
+    }
   };
   (@help $($t: tt) *) => {
     {
       use colored::Colorize;
       print!("{}:\n\t", "help".yellow().bold());
-    println!($($t) *);
-    panic!()}
+      println!($($t) *);
+      std::process::exit(1)
+    }
   };
 }

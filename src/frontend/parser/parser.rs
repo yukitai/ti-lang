@@ -35,7 +35,7 @@ impl<'a> Parser<'a> {
   pub fn parse(&mut self) {
     let mut program = AstProgram::new();
     while !self.tokens.is_eof() {
-      if !self.tokens.assert_next_tier(0) { panic!("Unexpected Token `{:?}`", self.tokens.peek()) }
+      if !self.tokens.assert_next_tier(0) { build_ti_error!(@at self.tokens.peek(), @err "Unexpected Token `{:?}`", self.tokens.peek()) }
       if self.tokens.is_eof() { break }
       if let Some(ast_node) = self.parse_definion(0, Scope::Global) {
         if let Some(ast_node) = ast_node {
@@ -98,10 +98,10 @@ impl<'a> Parser<'a> {
         // fn FN(FA: FT[, ...])
         fname = n;
       },
-      _ => panic!("Unexpect Token `{:?}`", self.tokens.peek())
+      _ => build_ti_error!(@at self.tokens.peek(), @err "Unexpect Token `{:?}`", self.tokens.peek())
     }
     if !self.tokens.assert_next(TokenType::OpenParen) {
-      panic!("Expect Token `(`, found `{:?}`", self.tokens.peek())
+      build_ti_error!(@at self.tokens.peek(), @err "Expect Token `(`, found `{:?}`", self.tokens.peek())
     }
     loop {
       if self.tokens.assert_next(TokenType::CloseParen) {
@@ -109,7 +109,7 @@ impl<'a> Parser<'a> {
       }
       if let TokenType::Identifier(argn) = self.tokens.next().t_type.clone() {
         if !self.tokens.assert_next(TokenType::OperatorColon) {
-          panic!("Expect Token `:`, found {:?}", self.tokens.peek())
+          build_ti_error!(@at self.tokens.peek(), @err "Expect Token `:`, found {:?}", self.tokens.peek())
         }
         let argt = self.parse_type();
         let a = self.sym_name();
@@ -125,7 +125,7 @@ impl<'a> Parser<'a> {
       self.tokens.forward();
       // self.tokens.forward();
       if self.tokens.is_eof() {
-        panic!("Expect Token `)`, found `Eof`")
+        build_ti_error!(@err "Expect Token `)`, found `Eof`")
       }
     }
 
@@ -188,12 +188,12 @@ impl<'a> Parser<'a> {
       TokenType::OpenParen => {
         let expr = self.parse_expr();
         if !self.tokens.assert_next(TokenType::CloseParen) {
-          panic!("Expect Token `)`, found {:?}.", self.tokens.peek())
+          build_ti_error!(@at self.tokens.peek(), @err "Expect Token `)`, found {:?}.", self.tokens.peek())
         }
         expr
       },
       _ => {
-        panic!("Unexpected Token `{:?}` While Parsing an Expr.", curr)
+        build_ti_error!(@at curr, @err "Unexpected Token `{:?}` While Parsing an Expr.", curr)
       },
     }
   }
