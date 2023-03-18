@@ -5,8 +5,6 @@ fn main() {
 	let src = "
 fn mid(a: i32, b: i32) -> i32 = (a + b) / 2
 
-fn head(l: &[T]) -> &T
-
 fn main() = 
 	println(\"* Mid 1 3 = {}\", mid(1, 3))
 ";
