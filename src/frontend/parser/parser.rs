@@ -84,7 +84,7 @@ impl<'a> Parser<'a> {
     }
   }
 
-  fn parse_fn_definion(&mut self, tier: usize, scope: Scope) -> Option<AstNode> {
+  fn parse_fn_definion(&mut self, tier: usize, _scope: Scope) -> Option<AstNode> {
     let mut types = HashMap::new();
     let fname;
     let mut fargs: Vec<FnArg> = Vec::new();
@@ -308,7 +308,15 @@ impl<'a> Parser<'a> {
   fn parse_type_anna(&mut self) -> Type<'a> {
     let t = self.parse_type_primary();
     if self.tokens.assert_next(TokenType::OperatorLes) {
-      let anna = Vec::new();
+      let mut anna = Vec::new();
+      loop {
+        let expr = self.parse_type();
+        anna.push(expr);
+        if self.tokens.assert_next(TokenType::OperatorGrt) {
+          break
+        }
+        self.tokens.forward();
+      }
       Type::Anna(Box::new(t), anna)
     } else {
       t
@@ -334,7 +342,7 @@ impl<'a> Parser<'a> {
           "f32" => Type::F32,
           "f64" => Type::F64,
           _ => {
-            Type::Unknown
+            Type::Costume(t.clone())
           },
         }
       },
@@ -350,6 +358,26 @@ impl<'a> Parser<'a> {
         }
         Type::Unit(unit)
       },
+      TokenType::OpenBrace => {
+        let t = self.parse_type();
+        let l = if self.tokens.assert_next(TokenType::Semi) {
+          if let TokenType::LiteralNum(l) = self.tokens.next().t_type {
+            l as usize
+          } else {
+            build_ti_error!(@at self.tokens.peek(), @err "Expect an Literal Number, found {:?}", self.tokens.peek())
+          }
+        } else {
+          0
+        };
+        if !self.tokens.assert_next(TokenType::CloseBrace) {
+          build_ti_error!(@at self.tokens.peek(), @err "Expect Token `]`, found {:?}", self.tokens.peek())
+        }
+        Type::Array(Box::new(t), l)
+      },
+      TokenType::OperatorRef => {
+        let t = self.parse_type();
+        Type::Ref(Box::new(t))
+      }
       _ => {
         build_ti_error!(@at curr, @err "Expect Identifier, found {:?}", curr)
       },

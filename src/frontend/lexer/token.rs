@@ -40,6 +40,9 @@ pub enum TokenType {
   KeywordImpl,
   OpenParen,
   CloseParen,
+  OpenBrace,
+  CloseBrace,
+  Semi,
 }
 
 pub type TokenAt = (usize, (usize, usize));

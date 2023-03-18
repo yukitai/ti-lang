@@ -92,6 +92,15 @@ impl Lexer {
         ')' => {
           tokens.push(Token::new(TokenType::CloseParen, self.here()));
         },
+        '[' => {
+          tokens.push(Token::new(TokenType::OpenBrace, self.here()));
+        },
+        ']' => {
+          tokens.push(Token::new(TokenType::CloseBrace, self.here()));
+        },
+        ';' => {
+          tokens.push(Token::new(TokenType::Semi, self.here()));
+        },
         '+' => {
           if self.peek() == &'=' {
             self.mark();

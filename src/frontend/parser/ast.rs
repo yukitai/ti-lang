@@ -3,6 +3,7 @@ use std::{rc::Rc, collections::HashMap};
 #[derive(Debug)]
 pub enum Type<'a> {
   Unknown,
+  Never,
   F32,
   F64,
   I8,
@@ -16,11 +17,14 @@ pub enum Type<'a> {
   U64,
   U128,
   Bool,
+  Ref(Box<Type<'a>>),
   Array(Box<Type<'a>>, usize),
   Unit(Vec<Type<'a>>),
-  Impled(&'a TraitDef<'a>),
-  Struct(&'a StructDef<'a>),
-  Enum(&'a EnumDef<'a>),
+  // Impled(&'a TraitDef<'a>),
+  // Struct(&'a StructDef<'a>),
+  // Enum(&'a EnumDef<'a>),
+  _NeverUseful(&'a str), // this is used for saving the lifetime 'a
+  Costume(Rc<String>),
   Anna(Box<Type<'a>>, Vec<Type<'a>>),
 }
 
