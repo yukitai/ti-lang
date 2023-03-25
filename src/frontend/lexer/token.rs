@@ -6,7 +6,7 @@ pub enum TokenType {
   LiteralStr(String),
   LiteralBool(bool),
   Identifier(Rc<String>),
-  IdentTier(usize),
+  // IdentTier(usize),
   OperatorAssign,
   OperatorAdd,
   OperatorSub,
@@ -42,6 +42,8 @@ pub enum TokenType {
   CloseParen,
   OpenBrace,
   CloseBrace,
+  OpenBracket,
+  CloseBracket,
   Semi,
 }
 
@@ -111,16 +113,6 @@ impl TokenStream {
     if let TokenType::Identifier(_) = self.tokens.get(self.curr).unwrap().t_type {
       self.forward();
       true
-    } else { false }
-  }
-
-  #[inline]
-  pub fn assert_next_tier(&mut self, tier: usize) -> bool {
-    if let TokenType::IdentTier(x) = self.tokens.get(self.curr).unwrap().t_type {
-      if x == tier {
-        self.forward();
-        true
-      } else { false }
     } else { false }
   }
 

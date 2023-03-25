@@ -5,18 +5,18 @@ use crate::{frontend::lexer::token::{TokenStream, TokenType}, build_ti_error};
 use super::ast::*;
 
 #[derive(Debug)]
-pub struct Parser<'a> {
+pub struct Parser {
   sym_id: usize,
-  pub fn_def: Vec<WithScope<FnDef<'a>>>,
-  pub struct_def: Vec<WithScope<StructDef<'a>>>,
-  pub enum_def: Vec<WithScope<EnumDef<'a>>>,
-  pub trait_def: Vec<WithScope<TraitDef<'a>>>,
-  pub var_def: Vec<WithScope<VarDef<'a>>>,
+  pub fn_def: Vec<WithScope<FnDef>>,
+  pub struct_def: Vec<WithScope<StructDef>>,
+  pub enum_def: Vec<WithScope<EnumDef>>,
+  pub trait_def: Vec<WithScope<TraitDef>>,
+  pub var_def: Vec<WithScope<VarDef>>,
   pub tokens: TokenStream,
   pub ast: AstNode,
 }
 
-impl<'a> Parser<'a> {
+impl Parser {
   pub fn new(tokens: TokenStream) -> Self {
     Self {
       sym_id: 0,
@@ -31,14 +31,14 @@ impl<'a> Parser<'a> {
   }
 }
 
-impl<'a> Parser<'a> {
+impl Parser {
   pub fn parse(&mut self) {
     let mut program = AstProgram::new();
     while !self.tokens.is_eof() {
-      if !self.tokens.assert_next_tier(0) { build_ti_error!(@at self.tokens.peek(), @err "Unexpected Token `{:?}`", self.tokens.peek()) }
-      if self.tokens.is_eof() { break }
-      if let Some(ast_node) = self.parse_definion(0, Scope::Global) {
-        if let Some(ast_node) = ast_node {
+      // if !self.tokens.assert_next_tier(0) { build_ti_error!(@at self.tokens.peek(), @err "Unexpected Token `{:?}`", self.tokens.peek()) }
+      // if self.tokens.is_eof() { break }
+      if let Some(ast_node) = self.parse_definion(Scope::Global) {
+          if let Some(ast_node) = ast_node {
           program.add(ast_node);
         }
       } else {
@@ -55,26 +55,26 @@ impl<'a> Parser<'a> {
     Rc::new(format!("${}", self.sym_id))
   }
 
-  fn parse_definion(&mut self, tier: usize, scope: Scope) -> Option<Option<AstNode>> {
+  fn parse_definion(&mut self, scope: Scope) -> Option<Option<AstNode>> {
     let token = self.tokens.next();
     match token.t_type {
       TokenType::KeywordFn => {
-        Some(self.parse_fn_definion(tier, scope))
+        Some(Some(self.parse_fn_definion(scope)))
       },
       TokenType::KeywordEnum => {
-        self.parse_enum_definion(tier, scope);
+        self.parse_enum_definion(scope);
         Some(None)
       },
       TokenType::KeywordStruct => {
-        self.parse_struct_definion(tier, scope);
+        self.parse_struct_definion(scope);
         Some(None)
       },
       TokenType::KeywordTrait => {
-        self.parse_trait_definion(tier, scope);
+        self.parse_trait_definion(scope);
         Some(None)
       },
       TokenType::KeywordImpl => {
-        Some(self.parse_impl_definion(tier, scope))
+        Some(self.parse_impl_definion(scope))
       },
       _ => {
         self.tokens.backward();
@@ -84,11 +84,9 @@ impl<'a> Parser<'a> {
     }
   }
 
-  fn parse_fn_definion(&mut self, tier: usize, _scope: Scope) -> Option<AstNode> {
-    let mut types = HashMap::new();
+  fn parse_fn_definion(&mut self, _scope: Scope) -> AstNode {
     let fname;
     let mut fargs: Vec<FnArg> = Vec::new();
-    let ret_t: Rc<String>;
     match self.tokens.next().t_type.clone() {
       TokenType::OperatorLes => {
         // fn<TN: TT[, ...]> FN(FA: FT[, ...])
@@ -108,13 +106,7 @@ impl<'a> Parser<'a> {
         break
       }
       if let TokenType::Identifier(argn) = self.tokens.next().t_type.clone() {
-        if !self.tokens.assert_next(TokenType::OperatorColon) {
-          build_ti_error!(@at self.tokens.peek(), @err "Expect Token `:`, found {:?}", self.tokens.peek())
-        }
-        let argt = self.parse_type();
-        let a = self.sym_name();
-        types.insert(a.clone(), argt);
-        let arg = FnArg::new(argn.clone(), a);
+        let arg = FnArg::new(argn.clone());
         fargs.push(arg);
       } else {
         build_ti_error!(@at self.tokens.last(), @err "Expect Identifier or Token `)`, found {:?}", self.tokens.last())
@@ -128,50 +120,40 @@ impl<'a> Parser<'a> {
         build_ti_error!(@err "Expect Token `)`, found `Eof`")
       }
     }
-
-    let ret_type = if self.tokens.assert_next(TokenType::OperatorArrow) {
-      self.parse_type()
-    } else {
-      Type::Unit(Vec::new())
-    };
-    let a = self.sym_name();
-    types.insert(a.clone(), ret_type);
-    ret_t = a;
     self.fn_def.push(WithScope::global(FnDef {
       name: fname.clone(),
-      types,
-      arguments: fargs,
-      ret_type: ret_t,
+      arguments: fargs.clone(),
     }));
 
-    if self.tokens.assert_next(TokenType::OperatorAssign) {
-      let mut fbody;
-      if self.tokens.assert_next_tier(tier + 1) {
-        fbody = self.parse_block(tier + 1);
-      } else {
-        let expr = self.parse_expr();
-        fbody = AstBlock::new();
-        fbody.add(AstNode::Expr(expr));
-      }
-      Some(AstNode::Fn(fname, fbody))
+    let mut fbody;
+    if self.tokens.assert_next(TokenType::OperatorFatArrow) {
+      
+      let expr = self.parse_expr();
+      fbody = AstBlock::new();
+      fbody.add(AstNode::Expr(expr));
     } else {
-      None
+      fbody = self.parse_block();
     }
+    
+    AstNode::Fn(FnDef {
+      name: fname.clone(),
+      arguments: fargs,
+    }, fbody)
   }
 
-  fn parse_enum_definion(&mut self, tier: usize, scope: Scope) {
+  fn parse_enum_definion(&mut self, scope: Scope) {
     todo!()
   }
 
-  fn parse_struct_definion(&mut self, tier: usize, scope: Scope) {
+  fn parse_struct_definion(&mut self, scope: Scope) {
     todo!()
   }
 
-  fn parse_trait_definion(&mut self, tier: usize, scope: Scope) {
+  fn parse_trait_definion(&mut self, scope: Scope) {
     todo!()
   }
 
-  fn parse_impl_definion(&mut self, tier: usize, scope: Scope) -> Option<AstNode> {
+  fn parse_impl_definion(&mut self, scope: Scope) -> Option<AstNode> {
     todo!()
   }
   
@@ -258,12 +240,12 @@ impl<'a> Parser<'a> {
     }
   }
 
-  fn find_scope(&self, tier: usize) -> Scope {
+  fn find_scope(&self) -> Scope {
     let mut idx = self.tokens.curr;
     while !self.tokens.is_eof() {
       match self.tokens.at(idx).unwrap().t_type {
-        TokenType::IdentTier(x) => {
-          if x < tier { break }
+        TokenType::CloseBracket => {
+          break
         }
         _ => {},
       }
@@ -272,40 +254,34 @@ impl<'a> Parser<'a> {
     Scope::Block(self.tokens.curr, idx)
   }
   
-  fn parse_block(&mut self, tier: usize) -> AstBlock {
+  fn parse_block(&mut self) -> AstBlock {
+    if !self.tokens.assert_next(TokenType::OpenBracket) {
+      build_ti_error!(@at self.tokens.peek(), @err "Expect Token `{{`, found {:?}.", self.tokens.peek())
+    }
     let mut block = AstBlock::new();
-    let scope = self.find_scope(tier);
-    self.tokens.backward();
-    while !self.tokens.is_eof() {
-      if let Some(ast_node) = self.parse_stmt(tier, &scope) {
-        block.add(ast_node);
-      } else {
-        break
-      }
+    let scope = self.find_scope();
+    while !self.tokens.is_eof() && !self.tokens.assert_next(TokenType::CloseBracket) {
+      let ast_node = self.parse_stmt(&scope);
+      block.add(ast_node);
     }
     block
   }
 
-  fn parse_stmt(&mut self, tier: usize, scope: &Scope) -> Option<AstNode> {
-    if self.tokens.assert_next_tier(tier) {
-      if let Some(ast_node) = self.parse_definion(tier, scope.clone()) {
-        Some(ast_node.unwrap_or(AstNode::Empty))
-      } else {
-        self.tokens.forward();
-        let expr = self.parse_expr();
-        Some(AstNode::Expr(expr))
-      }
+  fn parse_stmt(&mut self, scope: &Scope) -> AstNode {
+    if let Some(ast_node) = self.parse_definion(scope.clone()) {
+      ast_node.unwrap_or(AstNode::Empty)
     } else {
       self.tokens.forward();
-      None
+      let expr = self.parse_expr();
+      AstNode::Expr(expr)
     }
   }
 
-  fn parse_type(&mut self) -> Type<'a> {
+  fn parse_type(&mut self) -> Type {
     self.parse_type_anna()
   }
 
-  fn parse_type_anna(&mut self) -> Type<'a> {
+  fn parse_type_anna(&mut self) -> Type {
     let t = self.parse_type_primary();
     if self.tokens.assert_next(TokenType::OperatorLes) {
       let mut anna = Vec::new();
@@ -323,7 +299,7 @@ impl<'a> Parser<'a> {
     }
   }
 
-  fn parse_type_primary(&mut self) -> Type<'a> {
+  fn parse_type_primary(&mut self) -> Type {
     let curr = self.tokens.next();
     match &curr.t_type {
       TokenType::Identifier(t) => {

@@ -1,16 +1,16 @@
 use crate::frontend::parser::parser::Parser;
 
-pub struct Codegen<'a> {
-  parser: Parser<'a>,
+pub struct Codegen {
+  parser: Parser,
 }
 
-impl<'a> Codegen<'a> {
-  pub fn new(parser: Parser<'a>) -> Self {
+impl Codegen {
+  pub fn new(parser: Parser) -> Self {
     Self { parser }
   }
 }
 
-impl<'a> Codegen<'a> {
+impl Codegen {
   // this while be replaced with the struct `TiBytecode`
   pub fn bytecode(&self) -> String {
     format!("{:#?}\n{:#?}", self.parser.ast, self.parser.fn_def)

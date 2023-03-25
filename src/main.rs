@@ -1,19 +1,21 @@
-use ti_lang::{frontend::{lexer::lexer::Lexer, parser::parser::Parser}, backend::codegen::codegen::Codegen};
+use ti_lang::{
+    frontend::{lexer::lexer::Lexer, parser::parser::Parser},
+    vm::vm_ast,
+};
 
 fn main() {
-	
-	let src = "
-fn mid(a: i32, b: i32) -> i32 = (a + b) / 2
+    let src = "
+fn mid(a, b) => (a + b) / 2
 
-fn main() = 
-	println(\"* Mid 1 3 = {}\", mid(1, 3))
+fn main() {
+	mid(1, 3)
+}
 ";
-	let bytes = src.bytes().collect();
-	let mut lexer = Lexer::from_bytes(bytes).unwrap();
-	let tokens = lexer.tokenize();
-	let mut parser = Parser::new(tokens);
-	parser.parse();
-	let codegen = Codegen::new(parser);
-	println!("{}", codegen.bytecode());
-
+    let bytes = src.bytes().collect();
+    let mut lexer = Lexer::from_bytes(bytes).unwrap();
+    let tokens = lexer.tokenize();
+    let mut parser = Parser::new(tokens);
+    parser.parse();
+    let mut vm = vm_ast::TiVM::new();
+    println!("{:?}", vm.execute(parser.ast, "main"));
 }

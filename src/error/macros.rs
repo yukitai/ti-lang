@@ -22,6 +22,7 @@ macro_rules! build_ti_error {
       print!("{}: (line {}:{}:{})\n\t", "error".red().bold(), $token.t_at.0, $token.t_at.1.0, $token.t_at.1.1);
       println!($($t) *);
       std::process::exit(1)
+      // panic!()
     }
   };
   (@at $token: expr, @warn $($t: tt) *) => {
@@ -43,7 +44,7 @@ macro_rules! build_ti_error {
   (@note $($t: tt) *) => {
     {
       use colored::Colorize;
-      print!("{}:\n\t", "note".yellow().bold());
+      print!("{}:\n\t", "note".white().bold());
       println!($($t) *);
       std::process::exit(1)
     }
@@ -51,7 +52,7 @@ macro_rules! build_ti_error {
   (@info $($t: tt) *) => {
     {
       use colored::Colorize;
-      print!("{}:\n\t", "info".yellow().bold());
+      print!("{}:\n\t", "info".white().bold());
       println!($($t) *);
       std::process::exit(1)
     }
@@ -59,7 +60,7 @@ macro_rules! build_ti_error {
   (@err $($t: tt) *) => {
     {
       use colored::Colorize;
-      print!("{}:\n\t", "err".yellow().bold());
+      print!("{}:\n\t", "error".red().bold());
       println!($($t) *);
       std::process::exit(1)
     }
@@ -75,7 +76,7 @@ macro_rules! build_ti_error {
   (@help $($t: tt) *) => {
     {
       use colored::Colorize;
-      print!("{}:\n\t", "help".yellow().bold());
+      print!("{}:\n\t", "help".green().bold());
       println!($($t) *);
       std::process::exit(1)
     }

@@ -1,7 +1,7 @@
-use std::{rc::Rc, collections::HashMap};
+use std::rc::Rc;
 
-#[derive(Debug)]
-pub enum Type<'a> {
+#[derive(Debug, Clone)]
+pub enum Type {
   Unknown,
   Never,
   F32,
@@ -17,47 +17,42 @@ pub enum Type<'a> {
   U64,
   U128,
   Bool,
-  Ref(Box<Type<'a>>),
-  Array(Box<Type<'a>>, usize),
-  Unit(Vec<Type<'a>>),
+  Ref(Box<Type>),
+  Array(Box<Type>, usize),
+  Unit(Vec<Type>),
   // Impled(&'a TraitDef<'a>),
   // Struct(&'a StructDef<'a>),
   // Enum(&'a EnumDef<'a>),
-  _NeverUseful(&'a str), // this is used for saving the lifetime 'a
+  // _NeverUseful(&'a str), // this is used for saving the lifetime 'a
   Costume(Rc<String>),
-  Anna(Box<Type<'a>>, Vec<Type<'a>>),
+  Anna(Box<Type>, Vec<Type>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FnArg {
   pub name: Rc<String>,
-  pub a_type: Rc<String>,
 }
 
 impl FnArg {
-  pub fn new(name: Rc<String>, a_type: Rc<String>) -> Self {
-    Self { name, a_type }
+  pub fn new(name: Rc<String>) -> Self {
+    Self { name }
   }
 }
 
-#[derive(Debug)]
-pub struct FnDef<'a> {
+#[derive(Debug, Clone)]
+pub struct FnDef {
   pub name: Rc<String>,
-  pub types: HashMap<Rc<String>, Type<'a>>,
   pub arguments: Vec<FnArg>,
-  pub ret_type: Rc<String>,
 }
 
 #[derive(Debug)]
 pub struct StructField {
   pub name: Rc<String>,
-  pub a_type: Rc<String>,
 }
 
 #[derive(Debug)]
-pub struct StructDef<'a> {
+pub struct StructDef {
   pub name: Rc<String>,
-  pub types: HashMap<Rc<String>, Type<'a>>,
   pub fields: Vec<StructField>,
 }
 
@@ -68,27 +63,25 @@ pub struct EnumField {
 }
 
 #[derive(Debug)]
-pub struct EnumDef<'a> {
+pub struct EnumDef {
   pub name: Rc<String>,
-  pub types: HashMap<Rc<String>, Type<'a>>,
   pub fields: Vec<EnumField>,
 }
 
 #[derive(Debug)]
-pub struct TraitField<'a> {
-  pub body: FnDef<'a>,
+pub struct TraitField {
+  pub body: FnDef,
 }
 
 #[derive(Debug)]
-pub struct TraitDef<'a> {
+pub struct TraitDef {
   pub name: Rc<String>,
-  pub fields: Vec<TraitField<'a>>,
+  pub fields: Vec<TraitField>,
 }
 
 #[derive(Debug)]
-pub struct VarDef<'a> {
+pub struct VarDef {
   pub name: Rc<String>,
-  pub v_type: Type<'a>,
 }
 
 #[derive(Debug, Clone)]
@@ -137,10 +130,10 @@ impl<T> WithScope<T> {
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum AstNode {
   Program(AstProgram),
-  Fn(Rc<String>, AstBlock),
+  Fn(FnDef, AstBlock),
   Impl(Rc<String>, Vec<AstNode>),
   Let(Rc<String>, AstExpr),
   Expr(AstExpr),
@@ -148,7 +141,7 @@ pub enum AstNode {
   Empty,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AstBlock {
   pub block: Vec<AstNode>,
 }
@@ -165,7 +158,7 @@ impl AstBlock {
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AstProgram {
   pub program: Vec<AstNode>,
 }
@@ -182,7 +175,7 @@ impl AstProgram {
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum AstExpr {
   Add(Box<AstExpr>, Box<AstExpr>),
   Sub(Box<AstExpr>, Box<AstExpr>),

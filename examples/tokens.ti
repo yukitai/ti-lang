@@ -1,30 +1,9 @@
-fn<T: Add> add(a: T, b: T) -> T = a + b
+fn mid(a, b) => (a + b) / 2
 
-trait Any
-
-trait Display =
-  fn fmt(&self, f: Formatter) -> Result<String, ()>
-
-enum E =
-  A,
-  B(f64)
-
-struct A =
-  a: String,
-  b: f64
-
-impl A =
-  fn to_string(&self) -> String =
-    format("{}: {}", self.a, self.b)
-
-impl Disp for A =
-  fn fmt(&self, f: Formatter) -> Result<(), ()> =
-    self.to_string()
-
-// a.to_string()
-
-fn main() =
+fn main() {
   println("1+2={}", add(1, 2))
-  if env.contains("hello")
+  if env.contains("hello") {
     println("Hello, World!")
+  }
   println("Welcome to Ti-Lang")
+}

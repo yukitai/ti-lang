@@ -60,28 +60,6 @@ impl Lexer {
 
   pub fn tokenize(&mut self) -> TokenStream {
     let mut tokens = Vec::new();
-    { // parse the first ident tier
-      self.mark();
-      let mut tabs = 0;
-      let mut spaces = 0;
-      while !self.is_eof() {
-        let curr = self.next();
-        match curr {
-          '\n' | '\r' => {},
-          '\t' => {
-            tabs += 1;
-          },
-          ' ' => {
-            spaces += 1;
-          }
-          _ => {
-            self.backward();
-            break
-          },
-        }
-      }
-      tokens.push(Token::new(TokenType::IdentTier(tabs + spaces / (SPACE_SIZE as usize)), self.range()));
-    }
 
     let mut ignore_nl = false;
     while !self.is_eof() {
@@ -97,6 +75,12 @@ impl Lexer {
         },
         ']' => {
           tokens.push(Token::new(TokenType::CloseBrace, self.here()));
+        },
+        '{' => {
+          tokens.push(Token::new(TokenType::OpenBracket, self.here()));
+        },
+        '}' => {
+          tokens.push(Token::new(TokenType::CloseBracket, self.here()));
         },
         ';' => {
           tokens.push(Token::new(TokenType::Semi, self.here()));
@@ -286,7 +270,7 @@ impl Lexer {
           if ignore_nl {
             ignore_nl = false;
           } else {
-            tokens.push(Token::new(TokenType::IdentTier(tabs + spaces / (SPACE_SIZE as usize)), self.range()));
+            // tokens.push(Token::new(TokenType::IdentTier(tabs + spaces / (SPACE_SIZE as usize)), self.range()));
           }
         },
         '\\' => {
