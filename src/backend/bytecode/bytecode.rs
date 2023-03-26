@@ -1,4 +1,4 @@
-pub mod TiBC {
+pub mod ti_bytecode {
   pub const LOAD_CONST: u16   = 0;
   pub const LOAD_SESSION: u16 = 1;
   pub const BUILD_FUNC: u16   = 2;
